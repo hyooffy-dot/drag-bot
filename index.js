@@ -372,7 +372,7 @@ client.on('interactionCreate', async (interaction) => {
     if (db.warnings[guild.id]?.[target.id]) {
       delete db.warnings[guild.id][target.id];
       saveCasesData(db);
-      return interaction.reply('🗑️ تم مسح التحذيرات.');
+      return interaction.reply('🗑️ تم مسح التحذيرات بنجاح.');
     }
     return interaction.reply({ content: '⚠️ لا توجد تحذيرات مسجلة.', ephemeral: true });
   }
@@ -396,11 +396,7 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.login(TOKEN);
-const http = require('http');
-http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bot is running!');
-}).listen(process.env.PORT || 3000);
+
 const http = require('http');
 http.createServer((req, res) => {
   res.writeHead(200, { 'Content-Type': 'text/plain' });
