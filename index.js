@@ -182,17 +182,17 @@ const commands = [
   new SlashCommandBuilder().setName('broadcast').setDescription('إرسال رسالة خاصة جماعية').addStringOption(o => o.setName('message').setDescription('النص').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 ].map(c => c.toJSON());
 
-client.once('ready', () => {
+client.once('ready', async () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    
+    // ضع كود الـ await هنا بداخل الحدث:
+    try {
+        await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
+        console.log('Successfully registered application commands.');
+    } catch (error) {
+        console.error(error);
+    }
 });
-  console.log(`✅ تم تسجيل الدخول: ${client.user.tag}`);
-  const rest = new REST({ version: '10' }).setToken(TOKEN);
-  try {
-    await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-    console.log('✅ تم تفعيل وتسجيل جميع الأوامر بدقة!');
-  } catch (e) {
-    console.error(e);
-  }
 
 
 // الرد التلقائي بالمنشن
