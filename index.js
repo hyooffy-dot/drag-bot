@@ -213,53 +213,78 @@ client.on('messageCreate', async (message) => {
 client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const { commandName, guild, user, options, member, channel } = interaction;
-
 // الصوت والذكاء الاصطناعي //
 if (commandName === 'join') {
     await interaction.deferReply();
-    const vc = member.voice.channel;
-    if (!vc) return interaction.editReply({ content: '❌ يجب أن تدخل روم صوتي أولاً!', ephemeral: true });
-    voiceConnection = joinVoiceChannel({ channelId: vc.id, guildId: guild.id, adapterCreator: guild.voiceAdapterCreator });
-    await interaction.editReply(`🔊 تم الدخول إلى **${vc.name}**`);
-    await speakInVoice('مرحباً بالجميع');
+    try {
+        const vc = member.voice.channel;
+        if (!vc) return interaction.editReply({ content: '❌ يجب أن تدخل روم صوتي أولاً!', ephemeral: true });
+        voiceConnection = joinVoiceChannel({ channelId: vc.id, guildId: guild.id, adapterCreator: guild.voiceAdapterCreator });
+        await interaction.editReply(`🔊 تم الدخول إلى **${vc.name}**`);
+        await speakInVoice('مرحباً بالجميع');
+    } catch (error) {
+        console.error('Error in join command:', error);
+        await interaction.editReply('❌ حدث خطأ أثناء محاولة الانضمام للروم الصوتي.');
+    }
     return;
 }
 
 if (commandName === 'leave') {
     await interaction.deferReply();
-    if (!voiceConnection) return interaction.editReply({ content: '⚠️ لست في أي روم صوتي', ephemeral: true });
-    voiceConnection.destroy();
-    voiceConnection = null;
-    return interaction.editReply('👋 تم الخروج من الروم الصوتي');
+    try {
+        if (!voiceConnection) return interaction.editReply({ content: '⚠️ لست في أي روم صوتي', ephemeral: true });
+        voiceConnection.destroy();
+        voiceConnection = null;
+        await interaction.editReply('👋 تم الخروج من الروم الصوتي');
+    } catch (error) {
+        console.error('Error in leave command:', error);
+        await interaction.editReply('❌ حدث خطأ أثناء الخروج.');
+    }
+    return;
 }
 
 if (commandName === 'voice') {
     await interaction.deferReply();
-    currentVoice = options.getString('type');
-    await interaction.editReply('🎙️ تم تغيير صوت البوت بنجاح');
-    if (voiceConnection) await speakInVoice('تم تغيير صوتي بنجاح');
+    try {
+        currentVoice = options.getString('type');
+        await interaction.editReply('🎙️ تم تغيير صوت البوت بنجاح');
+        if (voiceConnection) await speakInVoice('تم تغيير صوتي بنجاح');
+    } catch (error) {
+        console.error('Error in voice command:', error);
+        await interaction.editReply('❌ حدث خطأ أثناء تغيير الصوت.');
+    }
     return;
 }
 
 if (commandName === 'speak') {
     await interaction.deferReply();
-    const textToSpeak = options.getString('text');
-    await interaction.editReply(`🗣️ جاري نطق النص: "${textToSpeak}"`);
-    if (voiceConnection) {
-        await speakInVoice(textToSpeak);
-    } else {
-        await interaction.editReply('⚠️ البوت ليس في أي روم صوتي حالياً!');
+    try {
+        const textToSpeak = options.getString('text');
+        await interaction.editReply(`🗣️ جاري نطق النص: "${textToSpeak}"`);
+        if (voiceConnection) {
+            await speakInVoice(textToSpeak);
+        } else {
+            await interaction.editReply('⚠️ البوت ليس في أي روم صوتي حالياً!');
+        }
+    } catch (error) {
+        console.error('Error in speak command:', error);
+        await interaction.editReply('❌ حدث خطأ أثناء محاولة النطق.');
     }
     return;
 }
 
 if (commandName === 'ask') {
     await interaction.deferReply();
-    const q = options.getString('question');
-    const ans = await getAIResponse(q);
-    const embed = new EmbedBuilder().setColor('Purple').setTitle('🤖 إجابة الذكاء الاصطناعي').addFields({ name: 'السؤال', value: q }, { name: 'الإجابة', value: ans });
-    await interaction.editReply({ embeds: [embed] });
-    if (voiceConnection) await speakInVoice(ans);
+    try {
+        const q = options.getString('question');
+        const ans = await getAIResponse(q);
+        const embed = new EmbedBuilder().setColor('Purple').setTitle('🤖 إجابة الذكاء الاصطناعي').addFields({ name: 'السؤال', value: q }, { name: 'الإجابة', value: ans });
+        await interaction.editReply({ embeds: [embed] });
+        if (voiceConnection) await speakInVoice(ans);
+    } catch (error) {
+        console.error('Error in ask command:', error);
+        await interaction.editReply('❌ حدث خطأ أثناء معالجة السؤال.');
+    }
     return;
 }
   // --- أوامر الإدارة والقضايا ---
