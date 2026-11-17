@@ -17,13 +17,11 @@ const { MsEdgeTTS, OUTPUT_FORMAT } = require('msedge-tts');
 const { GoogleGenAI } = require('@google/genai');
 const fs = require('fs');
 const ms = require('ms');
-
-// ================= الإعدادات الأساسية =================
-const TOKEN = 'MTU3MTc4OTEzODE2Mjg4NDY5OA.GS6FeR.FUWHO11kQ_hnG2p4jzpucNGwex-g1l3S_b4vJE';
-const GEMINI_API_KEY = 'AQ.Ab8RN6I0gBd5iCbW-hmkzrDx1gnT9AbYtkLpkYEawxRUe9F1qg';
-const LOG_CHANNEL_ID = '1571926085208244318'; // ضع آيدي روم السجلات هنا
-// ======================================================
-
+// ==================== الإعدادات الأساسية ====================
+const TOKEN = process.env.TOKEN;
+const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const LOG_CHANNEL_ID = process.env.LOG_CHANNEL_ID; // أو جعله عبر متغير بيئي أيضاً
+// ============================================================
 const ai = new GoogleGenAI({ apiKey: GEMINI_API_KEY });
 
 const client = new Client({
@@ -184,7 +182,9 @@ const commands = [
   new SlashCommandBuilder().setName('broadcast').setDescription('إرسال رسالة خاصة جماعية').addStringOption(o => o.setName('message').setDescription('النص').setRequired(true)).setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
 ].map(c => c.toJSON());
 
-client.once('ready', async () => {
+client.once('ready', () => {
+    console.log(`Logged in as ${client.user.tag}!`);
+});
   console.log(`✅ تم تسجيل الدخول: ${client.user.tag}`);
   const rest = new REST({ version: '10' }).setToken(TOKEN);
   try {
@@ -193,7 +193,7 @@ client.once('ready', async () => {
   } catch (e) {
     console.error(e);
   }
-});
+
 
 // الرد التلقائي بالمنشن
 client.on('messageCreate', async (message) => {
@@ -396,3 +396,13 @@ client.on('interactionCreate', async (interaction) => {
 });
 
 client.login(TOKEN);
+const http = require('http');
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running!');
+}).listen(process.env.PORT || 3000);
+const http = require('http');
+http.createServer((req, res) => {
+  res.writeHead(200, { 'Content-Type': 'text/plain' });
+  res.end('Bot is running!');
+}).listen(process.env.PORT || 3000);
