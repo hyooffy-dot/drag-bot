@@ -214,44 +214,54 @@ client.on('interactionCreate', async (interaction) => {
   if (!interaction.isChatInputCommand()) return;
   const { commandName, guild, user, options, member, channel } = interaction;
 
-  // الصوت والذكاء الاصطناعي
-  if (commandName === 'join') {
+// الصوت والذكاء الاصطناعي //
+if (commandName === 'join') {
+    await interaction.deferReply();
     const vc = member.voice.channel;
-    if (!vc) return interaction.reply({ content: '❌ يجب أن تدخل روم صوتي أولاً!', ephemeral: true });
+    if (!vc) return interaction.editReply({ content: '❌ يجب أن تدخل روم صوتي أولاً!', ephemeral: true });
     voiceConnection = joinVoiceChannel({ channelId: vc.id, guildId: guild.id, adapterCreator: guild.voiceAdapterCreator });
-    await interaction.reply(`🔊 تم الدخول إلى **${vc.name}**`);
+    await interaction.editReply(`🔊 تم الدخول إلى **${vc.name}**`);
     await speakInVoice('مرحباً بالجميع');
     return;
-  }
-  if (commandName === 'leave') {
-    if (!voiceConnection) return interaction.reply({ content: '⚠️ لست في أي روم صوتي.', ephemeral: true });
+}
+
+if (commandName === 'leave') {
+    await interaction.deferReply();
+    if (!voiceConnection) return interaction.editReply({ content: '⚠️ لست في أي روم صوتي', ephemeral: true });
     voiceConnection.destroy();
     voiceConnection = null;
-    return interaction.reply('👋 تم الخروج من الروم الصوتي.');
-  }
-  if (commandName === 'voice') {
+    return interaction.editReply('👋 تم الخروج من الروم الصوتي');
+}
+
+if (commandName === 'voice') {
+    await interaction.deferReply();
     currentVoice = options.getString('type');
-    await interaction.reply('🎙️ تم تغيير صوت البوت بنجاح.');
+    await interaction.editReply('🎙️ تم تغيير صوت البوت بنجاح');
     if (voiceConnection) await speakInVoice('تم تغيير صوتي بنجاح');
     return;
-  }
-  if (commandName === 'ask') {
-    const q = options.getString('question');
+}
+
+if (commandName === 'speak') {
     await interaction.deferReply();
+    const textToSpeak = options.getString('text');
+    await interaction.editReply(`🗣️ جاري نطق النص: "${textToSpeak}"`);
+    if (voiceConnection) {
+        await speakInVoice(textToSpeak);
+    } else {
+        await interaction.editReply('⚠️ البوت ليس في أي روم صوتي حالياً!');
+    }
+    return;
+}
+
+if (commandName === 'ask') {
+    await interaction.deferReply();
+    const q = options.getString('question');
     const ans = await getAIResponse(q);
-    const embed = new EmbedBuilder().setColor('Purple').setTitle('🤖 إجابة الذكاء الاصطناعي').addFields({ name: 'السؤال', value: q }, { name: 'الإجابة', value: ans.slice(0, 1024) });
+    const embed = new EmbedBuilder().setColor('Purple').setTitle('🤖 إجابة الذكاء الاصطناعي').addFields({ name: 'السؤال', value: q }, { name: 'الإجابة', value: ans });
     await interaction.editReply({ embeds: [embed] });
     if (voiceConnection) await speakInVoice(ans);
     return;
-  }
-  if (commandName === 'speak') {
-    if (!voiceConnection) return interaction.reply({ content: '❌ البوت ليس في روم صوتي.', ephemeral: true });
-    const txt = options.getString('text');
-    await interaction.reply({ content: `🗣️ جاري النطق...`, ephemeral: true });
-    await speakInVoice(txt);
-    return;
-  }
-
+}
   // --- أوامر الإدارة والقضايا ---
   if (commandName === 'warn') {
     const target = options.getUser('member');
