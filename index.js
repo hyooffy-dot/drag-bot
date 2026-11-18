@@ -445,7 +445,10 @@ if (commandName === 'ask') {
 client.once('ready', () => {
     console.log(`Logged in successfully as: ${client.user.tag}`);
 });
-
+console.log("Attempting to connect to Discord with token...");
+client.login(TOKEN).catch(error => {
+    console.error("Failed to login:", error);
+});
 client.login(TOKEN).catch(error => {
     console.error("Failed to login:", error);
 });
