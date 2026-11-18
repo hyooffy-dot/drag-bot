@@ -439,13 +439,19 @@ if (commandName === 'ask') {
 
     // 3. استخدام editReply في النهاية لأنه تم استخدام deferReply في البداية
     return interaction.editReply({ content: `✅ تم الإرسال إلى **${count}** عضو بنجاح.` });
-}
+    }
 });
 
-client.login(TOKEN);
+client.once('ready', () => {
+    console.log(`Logged in successfully as: ${client.user.tag}`);
+});
+
+client.login(TOKEN).catch(error => {
+    console.error("Failed to login:", error);
+});
 
 const http = require('http');
 http.createServer((req, res) => {
-  res.writeHead(200, { 'Content-Type': 'text/plain' });
-  res.end('Bot is running!');
+    res.writeHead(200, { 'Content-Type': 'text/plain' });
+    res.end('Bot is running!');
 }).listen(process.env.PORT || 3000);
