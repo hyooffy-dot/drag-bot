@@ -150,20 +150,21 @@ async function getAIResponse(promptText) {
   }
 }
 
-// تعريف جميع الأوامر
+// تعريف جميع الأوامر //
 const commands = [
-  // الصوت والذكاء الاصطناعي
-  new SlashCommandBuilder().setName('join').setDescription('دخول الروم الصوتي'),
-  new SlashCommandBuilder().setName('leave').setDescription('خروج من الروم الصوتي'),
-  new SlashCommandBuilder().setName('voice').setDescription('تغيير صوت وبصمة البوت').addStringOption(o => o.setName('type').setDescription('اختر الصوت').setRequired(true).addChoices(
-    { name: '🇸🇦 حامد (رجل - سعودي)', value: 'ar-SA-HamedNeural' },
-    { name: '🇸🇦 زارية (امرأة - سعودي)', value: 'ar-SA-ZariyahNeural' },
-    { name: '🇪🇬 شاكر (رجل - مصري)', value: 'ar-EG-ShakirNeural' },
-    { name: '🇪🇬 سلمى (امرأة - مصري)', value: 'ar-EG-SalmaNeural' }
-  )),
-  new SlashCommandBuilder().setName('ask').setDescription('سؤال الذكاء الاصطناعي').addStringOption(o => o.setName('question').setDescription('السؤال').setRequired(true)),
-  new SlashCommandBuilder().setName('speak').setDescription('نطق نص في الروم').addStringOption(o => o.setName('text').setDescription('النص').setRequired(true)),
-
+    // الصوت والذكاء الاصطناعي //
+    new SlashCommandBuilder().setName('join').setDescription('دخول الروم الصوتي'),
+    new SlashCommandBuilder().setName('leave').setDescription('خروج من الروم الصوتي'),
+    new SlashCommandBuilder().setName('voice').setDescription('تغيير صوت وبصمة البوت').addStringOption(o => o.setName('type').setDescription('اختر الصوت').setRequired(true)
+        .addChoices(
+            { name: 'SA (سعودي - رجل) - حامد', value: 'ar-SA-HamedNeural' },
+            { name: 'SA (سعودي - امرأة) - زارية', value: 'ar-SA-ZariyahNeural' },
+            { name: 'EG (مصري - رجل) - شاكر', value: 'ar-EG-ShakirNeural' },
+            { name: 'EG (مصري - امرأة) - سلمى', value: 'ar-EG-SalmaNeural' }
+        )
+    ),
+    new SlashCommandBuilder().setName('ask').setDescription('سؤال الذكاء الاصطناعي').addStringOption(o => o.setName('question').setDescription('السؤال').setRequired(true)),
+    new SlashCommandBuilder().setName('speak').setDescription('نطق نص في الروم').addStringOption(o => o.setName('text').setDescription('النص').setRequired(true)),
   // أوامر الإدارة الشاملة والدقيقة
   new SlashCommandBuilder().setName('warn').setDescription('تحذير عضو').addUserOption(o => o.setName('member').setDescription('العضو').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('السبب').setRequired(false)).setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
   new SlashCommandBuilder().setName('timeout').setDescription('إسكات عضو').addUserOption(o => o.setName('member').setDescription('العضو').setRequired(true)).addStringOption(o => o.setName('duration').setDescription('المدة (10m, 1h)').setRequired(true)).addStringOption(o => o.setName('reason').setDescription('السبب').setRequired(false)).setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
@@ -407,27 +408,38 @@ if (commandName === 'ask') {
     if (db.warnings[guild.id]?.[target.id]) {
       delete db.warnings[guild.id][target.id];
       saveCasesData(db);
-      return interaction.reply('🗑️ تم مسح التحذيرات بنجاح.');
+      return interaction.reply('🗑️ تم مسح التحذيرات ');
     }
     return interaction.reply({ content: '⚠️ لا توجد تحذيرات مسجلة.', ephemeral: true });
   }
 
   if (commandName === 'broadcast') {
-    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) return interaction.reply({ content: '❌ للمسؤولين فقط.', ephemeral: true });
+    // 1. التأكد من الصلاحيات مع الانتظار
+    if (!interaction.member.permissions.has(PermissionFlagsBits.Administrator)) {
+        return interaction.reply({ content: '❌ هذا الأمر للمشرفين فقط', ephemeral: true });
+    }
+
+    // 2. استخدام deferReply لأن العملية تأخذ وقتاً طويلاً
+    await interaction.deferReply({ ephemeral: true });
+
     const msgText = options.getString('message');
-    await interaction.reply({ content: '⏳ جاري إرسال الرسائل الخاصة للأعضاء...', ephemeral: true });
     await guild.members.fetch();
     const members = guild.members.cache.filter(m => !m.user.bot);
+    
     let count = 0;
     for (const [id, m] of members) {
-      try {
-        await m.send(`📢 **إشعار عام:**\n${msgText}`);
-        count++;
-        await new Promise(r => setTimeout(r, 1500));
-      } catch {}
+        try {
+            await m.send(`📢 **إشعار عام:**\n${msgText}`);
+            count++;
+            await new Promise(r => setTimeout(r, 1500)); // فاصل لتجنب حظر ديسكورد
+        } catch (err) {
+            // تخطي الأعضاء الذين يغلقون رسائل الخاص
+        }
     }
-    return interaction.followUp({ content: `✅ تم الإرسال إلى **${count}** عضو بنجاح.`, ephemeral: true });
-  }
+
+    // 3. استخدام editReply في النهاية لأنه تم استخدام deferReply في البداية
+    return interaction.editReply({ content: `✅ تم الإرسال إلى **${count}** عضو بنجاح.` });
+}
 });
 
 client.login(TOKEN);
